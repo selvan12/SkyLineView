@@ -1,9 +1,19 @@
+/*
+ * In a city there are N number of rectangular 2D buildings. Each buildings
+ * left and right (X and Y) top corner coordinates are given. Compute the
+ * outer contour points which gives SkyLineView when viewed from a distance.
+ * By taking consideration that buildings 2D points may overlap.
+ *
+ * Programming Language : GoLang
+ */
+
 package main
 
 import (
 	"fmt"
 )
 
+// constant corner value to indicate building
 const build_corner int = 4
 
 // struct for each points x, y coordinates on 2D graph
@@ -103,8 +113,6 @@ func removeRedundantPoints(input skyPoints) skyPoints {
 		// remember previous coordinate
 		yPrev = input[i].yData
 	}
-	//fmt.Println(input)
-	//fmt.Println(skyPtsResult)
 
 	return skyPtsResult
 }
@@ -116,6 +124,7 @@ func formatOutputPoints(inputToBeFormated skyPoints) skyPoints {
 	// skyPts which will be sent as result
 	skyPtsResult := skyPoints{}
 
+	// remove redundant points before formatting the skyPoints
 	var input = removeRedundantPoints(inputToBeFormated)
 
 	xValue, yValue := 0, 0
