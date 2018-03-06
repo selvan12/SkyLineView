@@ -11,10 +11,14 @@ package main
 
 import (
 	"fmt"
+	"bufio"
+	"os"
+	"strings"
+	"strconv"
 )
 
 // constant corner value to indicate building
-const build_corner int = 4
+const build_points int = 4
 
 // struct for each points x, y coordinates on 2D graph
 type point struct {
@@ -56,9 +60,15 @@ func validateRectanglePoints(pt1 point, pt2 point) bool {
 
 // print all points from the point collection
 // input: point collection to print
-func printPoints(pts []point) {
+func printPoints(pts []point) int{
 	length := len(pts)
-	fmt.Printf("\nTotal number of building are %d and its coordinates are:\n", length/2)
+	buildingCount := length/2
+
+	if buildingCount == 0{
+		fmt.Println("Builing count 0")
+		return buildingCount
+	}
+	fmt.Printf("\nTotal number of building are %d and its coordinates are:\n", buildingCount)
 	for i := 0; i < len(pts); i++ {
 		// print 2 points followed by newline for display
 		fmt.Print(pts[i])
@@ -66,6 +76,8 @@ func printPoints(pts []point) {
 			fmt.Println()
 		}
 	}
+
+	return buildingCount
 }
 
 // construct the building array from each point coordinates
@@ -242,6 +254,10 @@ func getSkyLineView(build []Building2D) skyPoints {
 		skyPts1 := getSkyLineView(build[:length/2])
 		skyPts2 := getSkyLineView(build[length/2:])
 
+		//fmt.Println("skyPts1 and skyPts2 are")
+		//fmt.Println(skyPts1)
+		//fmt.Println(skyPts2)
+
 		// merge two skyPoints diagonal
 		skyPtsResult = mergeTwoSkyPoints(skyPts1, skyPts2)
 	}
@@ -265,6 +281,7 @@ func main() {
 	//test case 4: (corner case)
 	// coordinates = []point{{2,10},{10,10},  {4,8},{10,8}}
 
+	/******Removed user input for each value
 	// initialize values
 	count := 0
 	point1, point2 := point{}, point{}
@@ -281,7 +298,7 @@ enter:
 	for i := 0; i < count; i++ {
 		fmt.Printf("Enter building %d points as below\n", i+1)
 		// get all four inputs of the building
-		for j := 0; j < build_corner; j++ {
+		for j := 0; j < build_points; j++ {
 			switch j {
 			case 0:
 				fmt.Print(" X1:")
@@ -311,9 +328,85 @@ enter:
 			coordinates = append(coordinates, point2)
 		}
 	}
+	***************/
+
+	// get the input tuple string from console until new line
+	fmt.Println("Enter building array of tuples - example: ((0,4),(1,4)) ::")
+	reenter:
+	reader := bufio.NewReader(os.Stdin)
+	tupleString, _ := reader.ReadString('\n')
+	//fmt.Println(tupleString)
+
+	// function to filter string values from tuple
+	splitFunc := func(r rune) bool {
+		ret := true
+		// filter only numeric char
+		if r >= '0' && r <= '9' {
+			ret = false
+		}
+		return ret
+	}
+	var tupleArray []string
+	tupleArray = strings.FieldsFunc(tupleString, splitFunc)
+	tupleLen := len(tupleArray)
+
+	// print tuple split array and its length
+	fmt.Println("\nTuple array: ", tupleArray, "\nTuple length: ", tupleLen)
+	// building point count
+	if tupleLen < build_points {
+		fmt.Println("Less than 4 inputs. Enter building coordinates again")
+		goto reenter
+	} else if tupleLen%build_points != 0 {
+		fmt.Println("Input points are not balanced and buildings considered are", tupleLen/build_points)
+	}
+	balancedCorner := tupleLen - (tupleLen%build_points)
+	point1, point2 := point{}, point{}
+
+	// get the all integer coordinates
+	for i := 0; i < balancedCorner; {
+		for j := 0; j < build_points; j++ {
+			// string to int conversion
+			val, err := strconv.Atoi(tupleArray[i+j])
+			if err != nil {
+				// handle error
+				fmt.Println(err)
+				os.Exit(2)
+			}
+			// collect all 4 values
+			switch j {
+				case 0:
+					point1.xData = val
+				case 1:
+					point1.yData =val
+				case 2:
+					point2.xData = val
+				case 3:
+					point2.yData = val
+			}
+		}
+		// check if building coordinates are valid
+		if !validateRectanglePoints(point1, point2) {
+			fmt.Println("Invalid rectangle coordinates.")
+		} else {
+			// append valid coordinates to building
+			coordinates = append(coordinates, point1)
+			coordinates = append(coordinates, point2)
+			//fmt.Println(point1)
+			//fmt.Println(point2)
+		}
+		// reinitialize the values
+		point1, point2 = point{0, 0}, point{0, 0}
+		// increment to next set of tuple
+		i = i+build_points
+	}
 
 	// print all the input skylines in format
-	printPoints(coordinates)
+	buildCount := printPoints(coordinates)
+	// atleast one building required
+	if buildCount == 0 {
+		fmt.Println("Enter coordinates again")
+		goto reenter
+	}
 	// construct the building structure from each pair of points
 	building := constructBuildingFromCoordinates(coordinates)
 
